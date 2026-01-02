@@ -16,7 +16,13 @@ const mailService = require("../../services/mail.service");
  */
 exports.register = async (req, res) => {
   try {
-    const { mobile_number, email, name, password, password_confirmation } = req.body;
+    const {
+      mobile_number,
+      email,
+      name,
+      password,
+      password_confirmation,
+    } = req.body;
 
     if (!mobile_number || !email || !name || !password || !password_confirmation) {
       return res.status(422).json({ message: "Missing required fields" });
@@ -63,17 +69,27 @@ exports.login = async (req, res) => {
     const { mobile_number, password } = req.body;
 
     if (!mobile_number || !password) {
-      return res.status(422).json({ message: "Mobile number and password required" });
+      return res.status(422).json({
+        message: "Mobile number and password required",
+      });
     }
 
-    const user = await User.findOne({ where: { mobile_number } });
+    // 🔴 IMPORTANT FIX: disable defaultScope
+    const user = await User.scope(null).findOne({
+      where: { mobile_number },
+    });
+
     if (!user) {
-      return res.status(401).json({ message: "Invalid mobile number or password" });
+      return res.status(401).json({
+        message: "Invalid mobile number or password",
+      });
     }
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
-      return res.status(401).json({ message: "Invalid mobile number or password" });
+      return res.status(401).json({
+        message: "Invalid mobile number or password",
+      });
     }
 
     const token = jwt.sign(
@@ -110,9 +126,7 @@ exports.googleLogin = async (req, res) => {
  */
 exports.profile = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, {
-      attributes: { exclude: ["password"] },
-    });
+    const user = await User.findByPk(req.user.id);
 
     if (!user) {
       return res.status(401).json({ message: "Unauthenticated." });
@@ -176,7 +190,11 @@ exports.profileUpdate = async (req, res) => {
  */
 exports.changePassword = async (req, res) => {
   try {
-    const { current_password, new_password, new_password_confirmation } = req.body;
+    const {
+      current_password,
+      new_password,
+      new_password_confirmation,
+    } = req.body;
 
     if (!current_password || !new_password || !new_password_confirmation) {
       return res.status(422).json({ message: "All fields are required" });
@@ -186,11 +204,14 @@ exports.changePassword = async (req, res) => {
       return res.status(422).json({ message: "Password confirmation does not match" });
     }
 
-    const user = await User.findByPk(req.user.id);
+    // 🔴 IMPORTANT FIX: disable defaultScope
+    const user = await User.scope(null).findByPk(req.user.id);
 
     const valid = await bcrypt.compare(current_password, user.password);
     if (!valid) {
-      return res.status(400).json({ message: "Current password is incorrect." });
+      return res.status(400).json({
+        message: "Current password is incorrect.",
+      });
     }
 
     user.password = await bcrypt.hash(new_password, 10);
@@ -215,7 +236,9 @@ exports.forgotPassword = async (req, res) => {
 
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(404).json({ message: "No user found with this email address." });
+      return res.status(404).json({
+        message: "No user found with this email address.",
+      });
     }
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -223,12 +246,14 @@ exports.forgotPassword = async (req, res) => {
     await PasswordReset.create({
       email,
       token,
-      expires_at: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+      expires_at: new Date(Date.now() + 60 * 60 * 1000),
     });
 
     await mailService.sendPasswordReset(email, token);
 
-    return res.json({ message: "Password reset link sent to your email." });
+    return res.json({
+      message: "Password reset link sent to your email.",
+    });
   } catch (error) {
     console.error("FORGOT PASSWORD ERROR:", error);
     return res.status(500).json({ message: "Failed to send reset link" });
@@ -247,20 +272,28 @@ exports.resetPassword = async (req, res) => {
     const { token } = req.params;
 
     if (!password || !password_confirmation) {
-      return res.status(422).json({ message: "Password fields are required" });
+      return res.status(422).json({
+        message: "Password fields are required",
+      });
     }
 
     if (password !== password_confirmation) {
-      return res.status(422).json({ message: "Password confirmation does not match" });
+      return res.status(422).json({
+        message: "Password confirmation does not match",
+      });
     }
 
     const reset = await PasswordReset.findOne({ where: { token } });
 
     if (!reset || reset.expires_at < new Date()) {
-      return res.status(400).json({ message: "Invalid or expired token." });
+      return res.status(400).json({
+        message: "Invalid or expired token.",
+      });
     }
 
-    const user = await User.findOne({ where: { email: reset.email } });
+    const user = await User.scope(null).findOne({
+      where: { email: reset.email },
+    });
 
     user.password = await bcrypt.hash(password, 10);
     await user.save();
