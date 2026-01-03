@@ -7,6 +7,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 
 const authRoutes = require("./routes/auth.routes");
+const lkroutes = require("./routes/livekit.routes")
 
 const app = express();
 
@@ -28,6 +29,9 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
  * =========================
  */
 app.use("/api", authRoutes);
+
+app.use("/api", lkroutes);
+
 
 /**
  * =========================
