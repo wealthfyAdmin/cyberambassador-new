@@ -13,14 +13,20 @@ module.exports = {
         allowNull: false,
       },
 
+      expires_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+
       created_at: {
         type: Sequelize.DATE,
-        allowNull: true,
+        allowNull: false,
         defaultValue: Sequelize.literal("NOW()"),
       },
     });
 
     await queryInterface.addIndex("password_resets", ["email"]);
+    await queryInterface.addIndex("password_resets", ["token"]);
   },
 
   async down(queryInterface) {
