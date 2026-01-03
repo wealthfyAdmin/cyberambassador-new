@@ -152,11 +152,27 @@ exports.profile = async (req, res) => {
 exports.profileUpdate = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id);
-    if (!user) return res.status(401).json({ message: "Unauthenticated." });
+    if (!user) {
+      return res.status(401).json({ message: "Unauthenticated." });
+    }
 
-    const { name, email } = req.body;
+    const { name, email, mobile_number } = req.body;
+    const profilePhoto = req.file;
 
-    if (email) {
+    // ✅ MINIMUM ONE FIELD CHECK
+    if (
+      !name &&
+      !email &&
+      !mobile_number &&
+      !profilePhoto
+    ) {
+      return res.status(422).json({
+        message: "At least one field (name, email, mobile number, or photo) must be provided",
+      });
+    }
+
+    // ✅ EMAIL UNIQUE CHECK
+    if (email && email !== user.email) {
       const exists = await User.findOne({
         where: { email, id: { [Op.ne]: user.id } },
       });
@@ -166,21 +182,40 @@ exports.profileUpdate = async (req, res) => {
       user.email = email;
     }
 
-    if (name) user.name = name;
-    if (req.file) user.profile_photo = req.file.path;
+    // ✅ MOBILE UNIQUE CHECK
+    if (mobile_number && mobile_number !== user.mobile_number) {
+      const exists = await User.findOne({
+        where: { mobile_number, id: { [Op.ne]: user.id } },
+      });
+      if (exists) {
+        return res.status(400).json({ message: "Mobile number has already been taken." });
+      }
+      user.mobile_number = mobile_number;
+    }
+
+    if (name) {
+      user.name = name;
+    }
+
+    if (profilePhoto) {
+      user.profile_photo = profilePhoto.path;
+    }
 
     await user.save();
 
-    if (user.profile_photo) {
-      user.profile_photo = `${req.protocol}://${req.get("host")}/${user.profile_photo}`;
+    // ✅ Convert photo path to full URL
+    const responseUser = user.toJSON();
+    if (responseUser.profile_photo) {
+      responseUser.profile_photo = `${req.protocol}://${req.get("host")}/${responseUser.profile_photo}`;
     }
 
-    return res.json(user);
+    return res.json(responseUser);
   } catch (error) {
     console.error("PROFILE UPDATE ERROR:", error);
     return res.status(500).json({ message: "Profile update failed" });
   }
 };
+
 
 /**
  * =========================

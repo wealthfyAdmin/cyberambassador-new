@@ -206,30 +206,41 @@
  * @swagger
  * /api/profile/update:
  *   post:
+ *     summary: Update user profile
  *     tags: [User]
- *     summary: Update user profile details
  *     security:
  *       - bearerAuth: []
  *     requestBody:
+ *       required: true
  *       content:
  *         multipart/form-data:
  *           schema:
+ *             type: object
  *             properties:
  *               name:
  *                 type: string
- *                 example: "Jane Doe"
+ *                 example: Jane Doe
  *               email:
  *                 type: string
  *                 format: email
- *                 example: "jane@example.com"
+ *                 example: jane@example.com
+ *               mobile_number:
+ *                 type: string
+ *                 example: 9876543211
  *               profile_photo:
  *                 type: string
  *                 format: binary
+ *             description: |
+ *               Provide **at least one** field to update.
  *     responses:
  *       200:
  *         description: Profile updated successfully
- *       400:
+ *       401:
+ *         description: Unauthenticated
+ *       422:
  *         description: Validation error
+ *       500:
+ *         description: Server error
  */
 
 /**
