@@ -10,11 +10,9 @@ const PORT = process.env.PORT || 3000;
     await sequelize.authenticate();
     console.log("✅ PostgreSQL connected successfully");
 
-    // 2️⃣ Sync models (use migrations later)
-    await sequelize.sync();
-    console.log("✅ Models synchronized");
+    // ❌ DO NOT call sequelize.sync() when using migrations
 
-    // 3️⃣ Start server
+    // 2️⃣ Start server
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`📚 Swagger available at http://localhost:${PORT}/api/docs`);
