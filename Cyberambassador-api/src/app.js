@@ -7,7 +7,8 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 
 const authRoutes = require("./routes/auth.routes");
-const lkroutes = require("./routes/livekit.routes")
+const livekitRoutes = require("./routes/livekit.routes");
+const passwordResetRoutes = require("./routes/password-reset.routes"); // ✅ ADD
 
 const app = express();
 
@@ -18,7 +19,7 @@ const app = express();
  */
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); // REQUIRED for HTML form
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
@@ -28,10 +29,13 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
  * ROUTES
  * =========================
  */
+
+// API routes (JSON)
 app.use("/api", authRoutes);
+app.use("/api", livekitRoutes);
 
-app.use("/api", lkroutes);
-
+// PASSWORD RESET (HTML VIEW) — ROOT LEVEL
+app.use("/", passwordResetRoutes); // ✅ REQUIRED
 
 /**
  * =========================

@@ -56,4 +56,24 @@ router.put(
   authController.changePassword
 );
 
+/**
+ * ============================
+ * PASSWORD RESET (VIEW BASED)
+ * ============================
+ */
+
+// Show reset password form
+router.get(
+  "/reset-password/:token",
+  authController.showResetPasswordForm
+);
+
+// Handle reset password form submit
+router.post(
+  "/reset-password/:token",
+  authController.handleResetPasswordForm
+);
+
+
+
 module.exports = router;

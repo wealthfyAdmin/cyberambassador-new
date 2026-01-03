@@ -7,6 +7,7 @@ const { v4: uuidv4 } = require("uuid");
 const User = require("../../models/User");
 const PasswordReset = require("../../models/PasswordReset");
 const mailService = require("../../services/mail.service");
+const path = require("path");
 
 
 /**
@@ -340,5 +341,72 @@ exports.resetPassword = async (req, res) => {
   } catch (error) {
     console.error("RESET PASSWORD ERROR:", error);
     return res.status(500).json({ message: "Password reset failed" });
+  }
+};
+
+/**
+ * =========================
+ * SHOW RESET PASSWORD FORM
+ * GET /reset-password/:token
+ * =========================
+ */
+exports.showResetPasswordForm = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    const reset = await PasswordReset.findOne({ where: { token } });
+    if (!reset || reset.expires_at < new Date()) {
+      return res.send("<h3>Invalid or expired reset link</h3>");
+    }
+
+    return res.sendFile(
+      path.join(__dirname, "../../views/reset-password.html")
+    );
+  } catch (error) {
+    console.error("RESET FORM ERROR:", error);
+    return res.send("<h3>Something went wrong</h3>");
+  }
+};
+
+/**
+ * =========================
+ * HANDLE RESET FORM SUBMIT
+ * POST /reset-password/:token
+ * =========================
+ */
+exports.handleResetPasswordForm = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password, password_confirmation } = req.body;
+
+    if (!password || !password_confirmation) {
+      return res.send("<h3>All fields are required</h3>");
+    }
+
+    if (password !== password_confirmation) {
+      return res.send("<h3>Passwords do not match</h3>");
+    }
+
+    const reset = await PasswordReset.findOne({ where: { token } });
+    if (!reset || reset.expires_at < new Date()) {
+      return res.send("<h3>Invalid or expired reset link</h3>");
+    }
+
+    const user = await User.findOne({ where: { email: reset.email } });
+    if (!user) {
+      return res.send("<h3>User not found</h3>");
+    }
+
+    user.password = await bcrypt.hash(password, 10);
+    await user.save();
+
+    await reset.destroy();
+
+    return res.send(
+      "<h3>Password reset successful. You may now log in.</h3>"
+    );
+  } catch (error) {
+    console.error("RESET SUBMIT ERROR:", error);
+    return res.send("<h3>Failed to reset password</h3>");
   }
 };

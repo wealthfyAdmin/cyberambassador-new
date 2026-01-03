@@ -31,7 +31,7 @@ transporter.verify((error) => {
   if (error) {
     console.error("❌ SMTP VERIFY FAILED:", error.message);
   } else {
-    console.log("📧 SMTP SERVER READY (Stackmail)");
+    console.log("📧 SMTP SERVER READY ");
   }
 });
 
@@ -41,7 +41,7 @@ transporter.verify((error) => {
  * -------------------------
  */
 exports.sendPasswordReset = async (email, token) => {
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+  const resetUrl = `${process.env.BACKEND_URL}/reset-password/${token}`;
 
   await transporter.sendMail({
     from: `"CyberAmbassador" <${process.env.MAIL_FROM}>`,
