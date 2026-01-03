@@ -149,37 +149,37 @@
  *         description: Email not found
  */
 
-/**
- * @swagger
- * /api/auth/reset-password/{token}:
- *   post:
- *     tags: [Authentication]
- *     summary: Reset password using token
- *     parameters:
- *       - name: token
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             required: [password, password_confirmation]
- *             properties:
- *               password:
- *                 type: string
- *                 example: "NewPass@123"
- *               password_confirmation:
- *                 type: string
- *                 example: "NewPass@123"
- *     responses:
- *       200:
- *         description: Password reset successful
- *       400:
- *         description: Invalid or expired token
- */
+// /**
+//  * @swagger
+//  * /api/auth/reset-password/{token}:
+//  *   post:
+//  *     tags: [Authentication]
+//  *     summary: Reset password using token
+//  *     parameters:
+//  *       - name: token
+//  *         in: path
+//  *         required: true
+//  *         schema:
+//  *           type: string
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         application/json:
+//  *           schema:
+//  *             required: [password, password_confirmation]
+//  *             properties:
+//  *               password:
+//  *                 type: string
+//  *                 example: "NewPass@123"
+//  *               password_confirmation:
+//  *                 type: string
+//  *                 example: "NewPass@123"
+//  *     responses:
+//  *       200:
+//  *         description: Password reset successful
+//  *       400:
+//  *         description: Invalid or expired token
+//  */
 
 /**
  * =========================
