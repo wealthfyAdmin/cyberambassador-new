@@ -54,7 +54,8 @@ app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
  * HEALTH CHECK
  * =========================
  */
-app.get("/health", (req, res) => {
+
+app.get("/", (req, res) => {
   res.json({
     status: "OK",
     service: "Node Auth API",
