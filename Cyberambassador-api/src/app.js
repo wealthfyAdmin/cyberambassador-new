@@ -9,6 +9,10 @@ const swaggerSpec = require("./config/swagger");
 const authRoutes = require("./routes/auth.routes");
 const livekitRoutes = require("./routes/livekit.routes");
 const passwordResetRoutes = require("./routes/password-reset.routes"); // ✅ ADD
+const messageRoutes = require("./routes/message.routes");
+
+
+
 
 const app = express();
 
@@ -33,6 +37,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 // API routes (JSON)
 app.use("/api", authRoutes);
 app.use("/api", livekitRoutes);
+app.use("/api", messageRoutes);
 
 // PASSWORD RESET (HTML VIEW) — ROOT LEVEL
 app.use("/", passwordResetRoutes); // ✅ REQUIRED
