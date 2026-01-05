@@ -1,0 +1,52 @@
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+  // ❌ DO NOT force websocket in Codespaces
+  // ✅ Let Socket.IO auto-upgrade (polling → websocket)
+  const socket = io("https://improved-zebra-jjpvqr744wvq2qrr6-3000.app.github.dev", {
+    transports: ["websocket"],
+  });
+
+  socket.on("connect", () => {
+    console.log("✅ Connected:", socket.id);
+
+    // 🔑 REQUIRED: register so socket joins the room
+    socket.emit("register", {
+      userId: "test-user-1"
+    });
+  });
+
+  socket.on("disconnect", (reason) => {
+    console.log("❌ Disconnected:", reason);
+  });
+
+  // 🔥 THIS IS THE IMPORTANT PART
+  socket.on("message", (payload) => {
+    // ALWAYS log raw payload first
+    console.log("📦 RAW SOCKET PAYLOAD:", payload);
+
+    if (!payload || !payload.type) {
+      console.warn("⚠️ Invalid payload received");
+      return;
+    }
+
+    if (payload.type === "NEW_MESSAGE") {
+      console.log("🆕 New message:", payload.message?.content);
+    }
+
+    if (payload.type === "EDIT_MESSAGE") {
+      console.log("✏️ Edited message:", payload.message?.content);
+    }
+
+    if (payload.type === "DELETE_MESSAGE") {
+      console.log("🗑️ Deleted message ID:", payload.messageId);
+    }
+  });
+
+  socket.on("system", (data) => {
+    console.log("ℹ️ System event:", data);
+  });
+
+  socket.on("connect_error", (err) => {
+    console.error("❌ Socket connect error:", err.message);
+  });
+</script>
