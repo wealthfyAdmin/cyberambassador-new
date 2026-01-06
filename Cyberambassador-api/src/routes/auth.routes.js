@@ -42,7 +42,7 @@ router.post("/auth/reset-password/:token", authController.resetPassword);
 router.get("/profile", authMiddleware, authController.profile);
 
 // Update profile (name, email, profile photo)
-router.post(
+router.patch(
   "/profile/update",
   authMiddleware,
   upload.single("profile_photo"),
