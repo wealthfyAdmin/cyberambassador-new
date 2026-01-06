@@ -29,7 +29,10 @@
  *   post:
  *     tags: [Authentication]
  *     summary: Register a new user
- *     description: Creates a new user account with name, email, mobile number, password, and optional profile photo.
+ *     description: |
+ *       Creates a new user account using mobile number, email, name, password,
+ *       and optional profile photo.
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -62,13 +65,42 @@
  *               profile_photo:
  *                 type: string
  *                 format: binary
+ *
  *     responses:
  *       201:
  *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: User registered successfully
+ *
+ *       400:
+ *         description: User already exists
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: User already exists
+ *
  *       422:
  *         description: Validation error
+ *         content:
+ *           application/json:
+ *             examples:
+ *               missing_fields:
+ *                 summary: Missing required fields
+ *                 value:
+ *                   message: Missing required fields
+ *               password_mismatch:
+ *                 summary: Password confirmation mismatch
+ *                 value:
+ *                   message: Password confirmation does not match
+ *
  *       500:
  *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Internal Server Error
  */
 
 /**
@@ -77,12 +109,19 @@
  *   post:
  *     tags: [Authentication]
  *     summary: Login user
+ *     description: |
+ *       Authenticates a user using mobile number and password.
+ *       Returns a JWT access token valid for 24 hours.
+ *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             required: [mobile_number, password]
+ *             type: object
+ *             required:
+ *               - mobile_number
+ *               - password
  *             properties:
  *               mobile_number:
  *                 type: string
@@ -90,20 +129,36 @@
  *               password:
  *                 type: string
  *                 example: "Admin@123"
+ *
  *     responses:
  *       200:
  *         description: Login successful
  *         content:
  *           application/json:
- *             schema:
- *               properties:
- *                 access_token:
- *                   type: string
- *                 token_type:
- *                   type: string
- *                   example: bearer
+ *             example:
+ *               access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *               token_type: bearer
+ *
  *       401:
- *         description: Invalid credentials
+ *         description: Invalid mobile number or password
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Invalid mobile number or password
+ *
+ *       422:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Mobile number and password required
+ *
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Login failed
  */
 
 /**
@@ -131,23 +186,47 @@
  *   post:
  *     tags: [Authentication]
  *     summary: Request password reset link
+ *     description: |
+ *       Sends a password reset link to the user's registered email address.
+ *       The reset link is valid for **1 hour**.
+ *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             required: [email]
+ *             type: object
+ *             required:
+ *               - email
  *             properties:
  *               email:
  *                 type: string
  *                 format: email
  *                 example: "user@example.com"
+ *
  *     responses:
  *       200:
- *         description: Password reset link sent
+ *         description: Password reset link sent successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Password reset link sent to your email.
+ *
  *       404:
  *         description: Email not found
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: No user found with this email address.
+ *
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Failed to send reset link
  */
+
 
 // /**
 //  * @swagger
@@ -204,12 +283,16 @@
 
 /**
  * @swagger
- * /api/profile/update:
- *   post:
- *     summary: Update user profile
+ * /api/profile:
+ *   patch:
+ *     summary: Update authenticated user's profile
+ *     description: |
+ *       Partially update the logged-in user's profile.
+ *       At least **one field** must be provided.
  *     tags: [User]
  *     security:
  *       - bearerAuth: []
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -226,21 +309,45 @@
  *                 example: jane@example.com
  *               mobile_number:
  *                 type: string
- *                 example: 9876543211
+ *                 example: "9876543211"
  *               profile_photo:
  *                 type: string
  *                 format: binary
- *             description: |
- *               Provide **at least one** field to update.
+ *           description: |
+ *             Provide **at least one** field to update.
+ *
  *     responses:
  *       200:
  *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               id: 1
+ *               name: Jane Doe
+ *               email: jane@example.com
+ *               mobile_number: "9876543211"
+ *               profile_photo: https://api.example.com/uploads/profile.jpg
+ *
  *       401:
- *         description: Unauthenticated
+ *         description: Unauthenticated (invalid or missing token)
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Unauthenticated.
+ *
  *       422:
- *         description: Validation error
+ *         description: Validation error (no fields provided)
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: At least one field (name, email, mobile number, or photo) must be provided
+ *
  *       500:
  *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Profile update failed
  */
 
 /**
