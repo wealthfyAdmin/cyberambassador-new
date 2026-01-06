@@ -153,7 +153,7 @@ exports.profile = async (req, res) => {
 /**
  * =========================
  * PROFILE UPDATE
- * POST /api/profile/update
+ * PATCH /api/profile/update
  * =========================
  */
 exports.profileUpdate = async (req, res) => {

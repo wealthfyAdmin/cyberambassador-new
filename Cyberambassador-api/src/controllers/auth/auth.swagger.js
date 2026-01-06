@@ -272,13 +272,40 @@
  *   get:
  *     tags: [User]
  *     summary: Get logged-in user profile
+ *     description: |
+ *       Returns the authenticated user's profile details.
+ *       Requires a valid Bearer token.
+ *
  *     security:
  *       - bearerAuth: []
+ *
  *     responses:
  *       200:
  *         description: User profile fetched successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               id: 1
+ *               name: John Doe
+ *               email: john@example.com
+ *               mobile_number: "9876543210"
+ *               profile_photo: https://api.example.com/uploads/profile.jpg
+ *               createdAt: "2025-01-01T10:30:00.000Z"
+ *               updatedAt: "2025-01-10T08:20:00.000Z"
+ *
  *       401:
- *         description: Unauthorized
+ *         description: Unauthenticated
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Unauthenticated.
+ *
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Failed to fetch profile
  */
 
 /**
@@ -355,14 +382,20 @@
  * /api/profile/change-password:
  *   put:
  *     tags: [User]
- *     summary: Change user password
+ *     summary: Change authenticated user's password
+ *     description: |
+ *       Changes the password for the currently authenticated user.
+ *       Requires the current password for verification.
+ *
  *     security:
  *       - bearerAuth: []
+ *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
+ *             type: object
  *             required:
  *               - current_password
  *               - new_password
@@ -377,11 +410,47 @@
  *               new_password_confirmation:
  *                 type: string
  *                 example: "NewPass@123"
+ *
  *     responses:
  *       200:
  *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Password changed successfully
+ *
  *       400:
- *         description: Incorrect current password
+ *         description: Current password is incorrect
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Current password is incorrect.
+ *
  *       401:
- *         description: Unauthorized
+ *         description: Unauthenticated
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Unauthenticated.
+ *
+ *       422:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             examples:
+ *               missing_fields:
+ *                 summary: Missing required fields
+ *                 value:
+ *                   message: All fields are required
+ *               confirmation_mismatch:
+ *                 summary: Password confirmation mismatch
+ *                 value:
+ *                   message: Password confirmation does not match
+ *
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             example:
+ *               message: Password change failed
  */
