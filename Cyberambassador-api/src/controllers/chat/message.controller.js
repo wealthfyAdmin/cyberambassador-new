@@ -15,8 +15,8 @@ exports.getMessages = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const { rows, count } = await Message.findAndCountAll({
-      where: { is_delete: false },
-      order: [["created_at", "DESC"]],
+      // where: { is_delete: false },
+      order: [["createdAt", "DESC"]],
       limit,
       offset,
     });
