@@ -1,6 +1,34 @@
-const { Op } = require("sequelize");
 const Message = require("../../models/Message");
+const User = require("../../models/User");
 const { emitMessage } = require("../../services/socket.service");
+
+/**
+ * ============================
+ * FORMAT MESSAGE 
+ * ============================
+ */
+const formatMessage = (msg) => {
+  if (!msg) return null;
+
+  const m = msg.toJSON ? msg.toJSON() : msg;
+
+  return {
+    id: m.id,
+    user_id: m.user_id,
+    content: m.content,
+    is_edit: m.is_edit,
+    is_delete: m.is_delete,
+    created_at: m.createdAt,
+    updated_at: m.updatedAt,
+    user: m.user
+      ? {
+          id: m.user.id,
+          name: m.user.name,
+          profile_photo: m.user.profile_photo,
+        }
+      : null,
+  };
+};
 
 /**
  * ============================
@@ -15,7 +43,13 @@ exports.getMessages = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const { rows, count } = await Message.findAndCountAll({
-      // where: { is_delete: false },
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "name", "profile_photo"],
+        },
+      ],
       order: [["createdAt", "DESC"]],
       limit,
       offset,
@@ -25,7 +59,7 @@ exports.getMessages = async (req, res) => {
       page,
       totalPages: Math.ceil(count / limit),
       totalMessages: count,
-      messages: rows.reverse(), // oldest → newest
+      messages: rows.reverse().map(formatMessage),
     });
   } catch (err) {
     console.error("GET MESSAGES ERROR:", err);
@@ -42,21 +76,36 @@ exports.getMessages = async (req, res) => {
 exports.sendMessage = async (req, res) => {
   try {
     const { content } = req.body;
-    if (!content?.trim()) {
+
+    if (!content || !content.trim()) {
       return res.status(422).json({ message: "Message content required" });
     }
 
     const message = await Message.create({
       user_id: req.user.id,
       content,
+      is_edit: false,
+      is_delete: false,
     });
+
+    const fullMessage = await Message.findByPk(message.id, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "name", "profile_photo"],
+        },
+      ],
+    });
+
+    const formatted = formatMessage(fullMessage);
 
     emitMessage({
       type: "NEW_MESSAGE",
-      message,
+      message: formatted,
     });
 
-    return res.status(201).json(message);
+    return res.status(201).json(formatted);
   } catch (err) {
     console.error("SEND MESSAGE ERROR:", err);
     return res.status(500).json({ message: "Failed to send message" });
@@ -65,7 +114,7 @@ exports.sendMessage = async (req, res) => {
 
 /**
  * ============================
- * EDIT MESSAGE (SOFT)
+ * EDIT MESSAGE
  * PUT /api/messages/:id
  * ============================
  */
@@ -74,7 +123,7 @@ exports.editMessage = async (req, res) => {
     const { content } = req.body;
     const { id } = req.params;
 
-    if (!content?.trim()) {
+    if (!content || !content.trim()) {
       return res.status(422).json({ message: "Updated content required" });
     }
 
@@ -94,12 +143,24 @@ exports.editMessage = async (req, res) => {
     message.is_edit = true;
     await message.save();
 
-    emitMessage({
-      type: "EDIT_MESSAGE",
-      message,
+    const fullMessage = await Message.findByPk(message.id, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "name", "profile_photo"],
+        },
+      ],
     });
 
-    return res.json(message);
+    const formatted = formatMessage(fullMessage);
+
+    emitMessage({
+      type: "EDIT_MESSAGE",
+      message: formatted,
+    });
+
+    return res.json(formatted);
   } catch (err) {
     console.error("EDIT MESSAGE ERROR:", err);
     return res.status(500).json({ message: "Failed to edit message" });
@@ -129,6 +190,7 @@ exports.deleteMessage = async (req, res) => {
     }
 
     message.is_delete = true;
+    message.content = "Message deleted";
     await message.save();
 
     emitMessage({
@@ -136,7 +198,10 @@ exports.deleteMessage = async (req, res) => {
       messageId: id,
     });
 
-    return res.json({ message: "Message deleted successfully" });
+    return res.json({
+      id: message.id,
+      is_delete: true,
+    });
   } catch (err) {
     console.error("DELETE MESSAGE ERROR:", err);
     return res.status(500).json({ message: "Failed to delete message" });
